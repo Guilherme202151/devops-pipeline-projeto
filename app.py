@@ -3,10 +3,12 @@ from flask import Flask
 # Cria a aplicação Flask
 app = Flask(__name__)
 
+
 # Rota principal
 @app.route("/")
 def home():
     return "Hello, DevOps World!"
+
 
 # Ponto de entrada para rodar localmente
 if __name__ == "__main__":
