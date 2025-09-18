@@ -1,22 +1,55 @@
-name: Build and Push Docker Image
+name: Docker CI/CD Deploy
+
 on:
   push:
-    branches: [ main ]  # vai rodar quando você fizer push na branch main
+    branches:
+      - main
 
 jobs:
-  build-and-push:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      # Passo 1: Checkout do código
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
+      # Passo 2: Configurar AWS CLI
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: sa-east-1
 
-      - name: Build and Push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          push: true
-          tags: guilherme202151/guilherme202151:latest
+      # Passo 3: Login no Amazon ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      # Passo 4: Build e push da imagem Docker
+      - name: Build, tag, and push Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_NAME: devops-pipeline
+          IMAGE_TAG: latest
+        run: |
+          docker build -t $IMAGE_NAME:latest .
+          docker tag $IMAGE_NAME:latest $ECR_REGISTRY/$IMAGE_NAME:latest
+          docker push $ECR_REGISTRY/$IMAGE_NAME:latest
+
+      # Passo 5: Deploy no ECS (usando cluster fictício)
+      - name: Deploy to ECS
+        env:
+          CLUSTER_NAME: Devops-pipeline  # Nome fictício do cluster
+          SERVICE_NAME: devops-service    # Nome do serviço ECS
+          IMAGE_URI: ${{ steps.login-ecr.outputs.registry }}/devops-pipeline:latest
+        run: |
+          echo "Atualizando serviço ECS..."
+          aws ecs update-service \
+            --cluster $CLUSTER_NAME \
+            --service $SERVICE_NAME \
+            --force-new-deployment \
+            --image $IMAGE_URI || echo "Deploy ignorado, cluster fictício ainda não existe."
+
+
