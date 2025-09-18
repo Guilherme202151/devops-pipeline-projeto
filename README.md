@@ -107,7 +107,3 @@ O deploy no ECS está configurado, mas não foi testado.
 
 Basta criar um cluster ECS real e atualizar o nome no workflow para ter o pipeline completo e funcional.
 
-Acesso ao Código
-
-Todo o código do projeto está disponível no meu GitHub:
-https://github.com/Guilherme202151/devops-pipeline-projeto.git
