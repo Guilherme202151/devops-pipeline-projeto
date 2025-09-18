@@ -1,4 +1,3 @@
-# EasyOrder - Dia 3
 
 ## Descrição
 Aplicação Flask simples para testes iniciais do projeto EasyOrder.  
